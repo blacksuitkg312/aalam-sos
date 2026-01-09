@@ -3,6 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AALAM SOS</title>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; margin: 0; display: flex; flex-direction: column; justify-content: center; height: 100vh; }
+        /* HIGHLIGHT: Better Visual Feedback */
+        .sos-btn {
+            width: 240px; height: 240px; background: radial-gradient(#ff0000, #4d0000);
+            border-radius: 50%; font-size: 50px; font-weight: bold; border: 10px solid #222;
+            color: white; box-shadow: 0 0 60px rgba(255, 0, 0, 0.4); margin: 0 auto;
+            transition: 0.2s; cursor: pointer;
+        }
+        .sos-btn:active { transform: scale(0.9); box-shadow: 0 0 20px #f00; }
+        #status { color: #ff3e3e; letter-spacing: 1px; margin-top: 30px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div style="margin-bottom: 20px;">🛡️ AALAM SECURITY</div>
+    <button class="sos-btn" id="sos-trigger">SOS</button>
+    <p id="status">PRESS AND HOLD FOR 3 SECONDS</p>
+
+    <script>
+        const TOKEN = '8214991980:AAF7B8fUkyOULoXf0ySrwX6zbPQBz3qpJvo';
+        const CHAT = '909942121';
+        let timer;
+
+        function sendSOS() {
+            document.getElementById('status').innerText = "🛰️ ACCESSING SATELLITES...";
+            
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const time = Date.now();
+                
+                // HIGHLIGHT: Capturing Phone Settings/Info
+                const device = navigator.platform;
+                const battery = await navigator.getBattery().then(b => Math.round(b.level * 100) + "%").catch(() => "N/A");
+                const settings = `Device: ${device} | Battery: ${battery}`;
+
+                // HIGHLIGHT: Clean message format for the Monitor
+                const message = `🚨 SOS_ALERT 🚨\nCoords: ${lat},${lng}\nInfo: ${settings}\nID: ${time}`;
+
+                fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT}&text=${encodeURIComponent(message)}`)
+                .then(() => {
+                    document.getElementById('status').innerText = "✅ ALERT RECEIVED BY COMMAND CENTER";
+                    setTimeout(() => { document.getElementById('status').innerText = "HOLD TO SEND AGAIN"; }, 5000);
+                });
+            }, (err) => alert("GPS Error: " + err.message), { enableHighAccuracy: true });
+        }
+
+        const btn = document.getElementById('sos-trigger');
+        btn.onpointerdown = () => { timer = setTimeout(sendSOS, 3000); };
+        window.onpointerup = () => { clearTimeout(timer); };
+    </script>
+</body>
+</html>
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AALAM SOS SENDER</title>
     <style>
         body { background: #000; color: #fff; font-family: sans-serif; text-align: center; margin: 0; overflow: hidden; touch-action: manipulation; }
@@ -60,3 +119,4 @@
 </html>
 
 
+ -->
