@@ -7,7 +7,6 @@
         body { background: #000; color: #fff; font-family: sans-serif; text-align: center; margin: 0; overflow: hidden; }
         .header { background: #1a1a1a; padding: 30px 20px; border-bottom: 2px solid #333; }
         .sos-container { height: 50vh; display: flex; align-items: center; justify-content: center; position: relative; }
-        
         .sos-btn {
             width: 200px; height: 200px; background: radial-gradient(#e53935, #8e0000);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -15,10 +14,8 @@
             box-shadow: 0 0 50px rgba(255, 0, 0, 0.4); cursor: pointer;
             user-select: none; -webkit-tap-highlight-color: transparent; z-index: 10;
         }
-
         svg { position: absolute; transform: rotate(-90deg); pointer-events: none; }
         circle { fill: none; stroke: #ff0000; stroke-width: 8; stroke-dasharray: 628; stroke-dashoffset: 628; transition: stroke-dashoffset 0.1s; }
-
         #accuracy-info { font-size: 12px; color: #888; margin-top: 15px; }
         .signal-bar { display: inline-block; width: 5px; background: #333; margin: 0 1px; transition: 0.3s; }
         .good { background: #4CAF50 !important; }
@@ -31,16 +28,13 @@
         <div style="color:red; font-size: 30px;">🛡️</div>
         <h2 style="letter-spacing: 2px; margin: 5px 0;">AALAM SECURITY</h2>
     </div>
-
     <div class="sos-container">
         <svg width="240" height="240">
             <circle id="progress-ring" cx="120" cy="120" r="100"></circle>
         </svg>
         <button class="sos-btn" id="sos-trigger">SOS</button>
     </div>
-
     <p id="status" style="color: #ff3e3e; font-weight: bold; margin:0;">HOLD FOR 3 SECONDS</p>
-
     <div id="accuracy-info">
         SIGNAL: <span id="signal-text">SYNCING GPS...</span>
         <div id="bars" style="margin-top:5px;">
@@ -49,9 +43,7 @@
             <div class="signal-bar" style="height:16px"></div>
         </div>
     </div>
-
     <script>
-        // **HIGHLIGHT: Your Telegram Credentials**
         const TELEGRAM_TOKEN = '8214991980:AAEMAzT-U0sBaypTIBaxZHy2GLGr_Qczhqc';
         const CHAT_ID = '909942121';
 
@@ -59,13 +51,11 @@
         const btn = document.getElementById('sos-trigger');
         const ring = document.getElementById('progress-ring');
 
-        // **HIGHLIGHT: Cleaned Signal Status Watcher**
         if (navigator.geolocation) {
             navigator.geolocation.watchPosition((pos) => {
                 const acc = pos.coords.accuracy;
                 const text = document.getElementById('signal-text');
                 const bars = document.querySelectorAll('.signal-bar');
-                
                 if (acc < 30) {
                     text.innerText = "EXCELLENT (" + Math.round(acc) + "m)";
                     bars.forEach(b => b.className = 'signal-bar good');
@@ -99,31 +89,22 @@
             ring.style.strokeDashoffset = 628;
         }
 
-        // **HIGHLIGHT: Fixed Single sendSOS function**
         function sendSOS() {
             document.getElementById('status').innerText = "📡 SENDING...";
-            
-            const geoOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
-
             navigator.geolocation.getCurrentPosition((position) => {
                 const { latitude, longitude, accuracy } = position.coords;
-                // **HIGHLIGHT: Corrected the Google Maps URL formatting**
                 const mapLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                const text = `🚨 **SOS ALERT** 🚨\nAccuracy: ${Math.round(accuracy)}m\nLocation: ${mapLink}`;
+                const text = `🚨 SOS ALERT 🚨\nAccuracy: ${Math.round(accuracy)}m\nLocation: ${mapLink}`;
 
                 fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(text)}&parse_mode=Markdown`)
                 .then(() => {
                     document.getElementById('status').innerText = "✅ SENT TO COMMAND";
                     setTimeout(() => { document.getElementById('status').innerText = "HOLD FOR 3 SECONDS"; }, 3000);
                 })
-                .catch(err => {
-                    document.getElementById('status').innerText = "❌ FAILED TO SEND";
-                    console.error(err);
-                });
-            }, (error) => {
-                document.getElementById('status').innerText = "❌ GPS ERROR";
-                alert("Location Error: " + error.message);
-            }, geoOptions);
+                .catch(() => { document.getElementById('status').innerText = "❌ NETWORK ERROR"; });
+            }, (err) => {
+                document.getElementById('status').innerText = "❌ GPS ERROR: " + err.message;
+            }, { enableHighAccuracy: true, timeout: 10000 });
         }
 
         btn.addEventListener('touchstart', startHold);
