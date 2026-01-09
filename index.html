@@ -102,9 +102,9 @@
             navigator.geolocation.getCurrentPosition((position) => {
                 const { latitude, longitude, accuracy } = position.coords;
                 const mapLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                const text = `🚨 **SOS ALERT** 🚨\nAccuracy: ${Math.round(accuracy)}m\nLocation: ${mapLink}`;
+                const text = `🚨   SOS ALERT   🚨\nAccuracy: ${Math.round(accuracy)}m\nLocation: ${mapLink}`;
 
-                **fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(text)}&parse_mode=Markdown`)**
+                fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(text)}&parse_mode=Markdown`)  
                 .then(() => {
                     document.getElementById('status').innerText = "✅ SENT TO COMMAND";
                     setTimeout(() => { document.getElementById('status').innerText = "HOLD FOR 3 SECONDS"; }, 3000);
@@ -132,46 +132,46 @@
 <script>
     // ... (keep your existing variables) ...
 
-    **// NEW: Function to check signal quality continuously**
-    **function updateSignalStatus() {**
-        **if (navigator.geolocation) {**
-            **navigator.geolocation.watchPosition((pos) => {**
-                **const acc = pos.coords.accuracy;**
-                **const text = document.getElementById('signal-text');**
-                **const bars = document.querySelectorAll('.signal-bar');**
+      // NEW: Function to check signal quality continuously  
+      function updateSignalStatus() {  
+          if (navigator.geolocation) {  
+              navigator.geolocation.watchPosition((pos) => {  
+                  const acc = pos.coords.accuracy;  
+                  const text = document.getElementById('signal-text');  
+                  const bars = document.querySelectorAll('.signal-bar');  
                 
-                **if (acc < 20) {** **text.innerText = "EXCELLENT (" + Math.round(acc) + "m)";**
-                    **bars.forEach(b => b.className = 'signal-bar good');**
-                **} else if (acc < 100) {**
-                    **text.innerText = "FAIR (" + Math.round(acc) + "m)";**
-                    **bars.forEach((b, i) => b.className = i < 2 ? 'signal-bar fair' : 'signal-bar');**
-                **} else {**
-                    **text.innerText = "POOR (" + Math.round(acc) + "m)";**
-                    **bars[0].className = 'signal-bar poor';**
-                **}**
-            **}, (err) => {}, { enableHighAccuracy: true });**
-        **}**
-    **}**
+                  if (acc < 20) {     text.innerText = "EXCELLENT (" + Math.round(acc) + "m)";  
+                      bars.forEach(b => b.className = 'signal-bar good');  
+                  } else if (acc < 100) {  
+                      text.innerText = "FAIR (" + Math.round(acc) + "m)";  
+                      bars.forEach((b, i) => b.className = i < 2 ? 'signal-bar fair' : 'signal-bar');  
+                  } else {  
+                      text.innerText = "POOR (" + Math.round(acc) + "m)";  
+                      bars[0].className = 'signal-bar poor';  
+                  }  
+              }, (err) => {}, { enableHighAccuracy: true });  
+          }  
+      }  
 
-    **// Call this when the page loads**
-    **updateSignalStatus();**
+      // Call this when the page loads  
+      updateSignalStatus();  
 
     function sendSOS() {
-        **const geoOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };**
+          const geoOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };  
 
         navigator.geolocation.getCurrentPosition((position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            **const acc = position.coords.accuracy;**
+              const acc = position.coords.accuracy;  
 
             // Example: Sending via WhatsApp (as we discussed removing Firebase)
             const msg = encodeURIComponent(`🚨 SOS ALERT!\nAccuracy: ${acc}m\nLocation: https://www.google.com/maps?q=${lat},${lng}`);
-            **window.location.href = `https://wa.me/YOUR_NUMBER?text=${msg}`;**
+              window.location.href = `https://wa.me/YOUR_NUMBER?text=${msg}`;  
 
             document.getElementById('status').innerText = "🚨 REDIRECTING...";
         }, (error) => {
             alert("Location Error: " + error.message);
-        }, **geoOptions**);
+        },   geoOptions  );
     }
 
     // ... (keep your existing button listeners) ...
