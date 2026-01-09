@@ -1,0 +1,178 @@
+<style>
+    #accuracy-info { font-size: 12px; color: #888; margin-top: 10px; }
+    .signal-bar { display: inline-block; width: 4px; background: #444; margin: 0 1px; }
+    .good { background: #4CAF50 !important; } /* Green */
+    .fair { background: #FFC107 !important; } /* Yellow */
+    .poor { background: #F44336 !important; } /* Red */
+</style><!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AALAM SOS SENDER</title>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; margin: 0; overflow: hidden; }
+        .header { background: #1a1a1a; padding: 30px 20px; border-bottom: 2px solid #333; }
+        .sos-container { height: 50vh; display: flex; align-items: center; justify-content: center; position: relative; }
+        .sos-btn {
+            width: 200px; height: 200px; background: radial-gradient(#e53935, #8e0000);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 40px; font-weight: bold; border: none; color: white;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.4); cursor: pointer;
+            user-select: none; -webkit-tap-highlight-color: transparent; z-index: 10;
+        }
+        svg { position: absolute; transform: rotate(-90deg); pointer-events: none; }
+        circle { fill: none; stroke: #ff0000; stroke-width: 8; stroke-dasharray: 628; stroke-dashoffset: 628; }
+        #accuracy-info { font-size: 12px; color: #888; margin-top: 15px; }
+        .signal-bar { display: inline-block; width: 5px; background: #333; margin: 0 1px; transition: 0.3s; }
+        .good { background: #4CAF50 !important; }
+        .fair { background: #FFC107 !important; }
+        .poor { background: #F44336 !important; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="color:red; font-size: 30px;">🛡️</div>
+        <h2 style="letter-spacing: 2px; margin: 5px 0;">AALAM SECURITY</h2>
+    </div>
+
+    <div class="sos-container">
+        <svg width="240" height="240">
+            <circle id="progress-ring" cx="120" cy="120" r="100"></circle>
+        </svg>
+        <button class="sos-btn" id="sos-trigger">SOS</button>
+    </div>
+
+    <p id="status" style="color: #ff3e3e; font-weight: bold; margin:0;">HOLD FOR 3 SECONDS</p>
+
+    <div id="accuracy-info">
+        SIGNAL: <span id="signal-text">SYNCING GPS...</span>
+        <div id="bars" style="margin-top:5px;">
+            <div class="signal-bar" style="height:8px"></div>
+            <div class="signal-bar" style="height:12px"></div>
+            <div class="signal-bar" style="height:16px"></div>
+        </div>
+    </div>
+
+    <script>
+        const TELEGRAM_TOKEN = '8214991980:AAEMAzT-U0sBaypTIBaxZHy2GLGr_Qczhqc';
+        const CHAT_ID = '909942121';
+
+        let timer, progress = 0;
+        const btn = document.getElementById('sos-trigger');
+        const ring = document.getElementById('progress-ring');
+
+        // Watch Location Accuracy
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition((pos) => {
+                const acc = pos.coords.accuracy;
+                const text = document.getElementById('signal-text');
+                const bars = document.querySelectorAll('.signal-bar');
+                if (acc < 30) {
+                    text.innerText = "EXCELLENT (" + Math.round(acc) + "m)";
+                    bars.forEach(b => b.className = 'signal-bar good');
+                } else {
+                    text.innerText = "WEAK (" + Math.round(acc) + "m)";
+                    bars[0].className = 'signal-bar poor';
+                }
+            }, null, { enableHighAccuracy: true });
+        }
+
+        function startHold(e) {
+            e.preventDefault();
+            if (timer) clearInterval(timer);
+            timer = setInterval(() => {
+                progress += 2;
+                ring.style.strokeDashoffset = 628 - (628 * progress / 100);
+                if (progress >= 100) {
+                    clearInterval(timer);
+                    sendSOS();
+                    resetProgress();
+                }
+            }, 60);
+        }
+
+        function resetProgress() {
+            clearInterval(timer);
+            progress = 0;
+            ring.style.strokeDashoffset = 628;
+        }
+
+        function sendSOS() {
+            document.getElementById('status').innerText = "📡 SENDING...";
+            navigator.geolocation.getCurrentPosition((position) => {
+                const { latitude, longitude, accuracy } = position.coords;
+                const mapLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                const text = `🚨 **SOS ALERT** 🚨\nAccuracy: ${Math.round(accuracy)}m\nLocation: ${mapLink}`;
+
+                **fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(text)}&parse_mode=Markdown`)**
+                .then(() => {
+                    document.getElementById('status').innerText = "✅ SENT TO COMMAND";
+                    setTimeout(() => { document.getElementById('status').innerText = "HOLD FOR 3 SECONDS"; }, 3000);
+                });
+            }, null, { enableHighAccuracy: true });
+        }
+
+        btn.addEventListener('touchstart', startHold);
+        btn.addEventListener('mousedown', startHold);
+        window.addEventListener('touchend', resetProgress);
+        window.addEventListener('mouseup', resetProgress);
+    </script>
+</body>
+</html>
+
+<div id="accuracy-info">
+    SIGNAL: <span id="signal-text">CHECKING...</span>
+    <div id="bars">
+        <div class="signal-bar" style="height:5px"></div>
+        <div class="signal-bar" style="height:8px"></div>
+        <div class="signal-bar" style="height:11px"></div>
+    </div>
+</div>
+
+<script>
+    // ... (keep your existing variables) ...
+
+    **// NEW: Function to check signal quality continuously**
+    **function updateSignalStatus() {**
+        **if (navigator.geolocation) {**
+            **navigator.geolocation.watchPosition((pos) => {**
+                **const acc = pos.coords.accuracy;**
+                **const text = document.getElementById('signal-text');**
+                **const bars = document.querySelectorAll('.signal-bar');**
+                
+                **if (acc < 20) {** **text.innerText = "EXCELLENT (" + Math.round(acc) + "m)";**
+                    **bars.forEach(b => b.className = 'signal-bar good');**
+                **} else if (acc < 100) {**
+                    **text.innerText = "FAIR (" + Math.round(acc) + "m)";**
+                    **bars.forEach((b, i) => b.className = i < 2 ? 'signal-bar fair' : 'signal-bar');**
+                **} else {**
+                    **text.innerText = "POOR (" + Math.round(acc) + "m)";**
+                    **bars[0].className = 'signal-bar poor';**
+                **}**
+            **}, (err) => {}, { enableHighAccuracy: true });**
+        **}**
+    **}**
+
+    **// Call this when the page loads**
+    **updateSignalStatus();**
+
+    function sendSOS() {
+        **const geoOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };**
+
+        navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            **const acc = position.coords.accuracy;**
+
+            // Example: Sending via WhatsApp (as we discussed removing Firebase)
+            const msg = encodeURIComponent(`🚨 SOS ALERT!\nAccuracy: ${acc}m\nLocation: https://www.google.com/maps?q=${lat},${lng}`);
+            **window.location.href = `https://wa.me/YOUR_NUMBER?text=${msg}`;**
+
+            document.getElementById('status').innerText = "🚨 REDIRECTING...";
+        }, (error) => {
+            alert("Location Error: " + error.message);
+        }, **geoOptions**);
+    }
+
+    // ... (keep your existing button listeners) ...
+</script>
