@@ -3,52 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AALAM SOS</title>
+    <title>AALAM SOS PRO</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; margin: 0; display: flex; flex-direction: column; justify-content: center; height: 100vh; }
-        /* HIGHLIGHT: Better Visual Feedback */
+        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
         .sos-btn {
-            width: 240px; height: 240px; background: radial-gradient(#ff0000, #4d0000);
-            border-radius: 50%; font-size: 50px; font-weight: bold; border: 10px solid #222;
-            color: white; box-shadow: 0 0 60px rgba(255, 0, 0, 0.4); margin: 0 auto;
-            transition: 0.2s; cursor: pointer;
+            width: 220px; height: 220px; background: radial-gradient(#ff0000, #800000);
+            border-radius: 50%; font-size: 40px; font-weight: bold; border: 5px solid #333;
+            color: white; box-shadow: 0 0 50px rgba(255,0,0,0.5); margin: 30px auto;
         }
-        .sos-btn:active { transform: scale(0.9); box-shadow: 0 0 20px #f00; }
-        #status { color: #ff3e3e; letter-spacing: 1px; margin-top: 30px; font-size: 14px; }
+        .profile-box { background: #1a1a1a; padding: 15px; border-radius: 10px; border: 1px solid #333; margin-top: 20px; }
+        input { width: 80%; padding: 10px; margin: 5px; background: #222; border: 1px solid #444; color: #fff; }
+        button.save { background: #4CAF50; color: white; border: none; padding: 10px 20px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div style="margin-bottom: 20px;">🛡️ AALAM SECURITY</div>
+    <h2>🛡️ AALAM SECURITY</h2>
+
+    <div class="profile-box">
+        <input type="text" id="user-name" placeholder="Full Name (e.g. Almazbek)">
+        <input type="text" id="user-address" placeholder="Home Address">
+        <button class="save" onclick="saveProfile()">SAVE SETTINGS</button>
+    </div>
+
     <button class="sos-btn" id="sos-trigger">SOS</button>
-    <p id="status">PRESS AND HOLD FOR 3 SECONDS</p>
+    <p id="status">HOLD 3 SECONDS TO SEND</p>
 
     <script>
         const TOKEN = '8214991980:AAF7B8fUkyOULoXf0ySrwX6zbPQBz3qpJvo';
         const CHAT = '909942121';
         let timer;
 
+        function saveProfile() {
+            localStorage.setItem('user_name', document.getElementById('user-name').value);
+            localStorage.setItem('user_addr', document.getElementById('user-address').value);
+            alert("Settings Saved!");
+        }
+
+        // Fill inputs from storage on load
+        document.getElementById('user-name').value = localStorage.getItem('user_name') || "";
+        document.getElementById('user-address').value = localStorage.getItem('user_addr') || "";
+
         function sendSOS() {
-            document.getElementById('status').innerText = "🛰️ ACCESSING SATELLITES...";
+            const name = localStorage.getItem('user_name') || "Unknown User";
+            const addr = localStorage.getItem('user_addr') || "No Address Saved";
             
+            document.getElementById('status').innerText = "🛰️ PINPOINTING...";
+
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const lat = pos.coords.latitude;
                 const lng = pos.coords.longitude;
-                const time = Date.now();
+
+                // HIGHLIGHT: Step 1 - Send the Precise Map Pin
+                await fetch(`https://api.telegram.org/bot${TOKEN}/sendLocation?chat_id=${CHAT}&latitude=${lat}&longitude=${lng}`);
+
+                // HIGHLIGHT: Step 2 - Send the Name and Address Card
+                const detailMsg = `🚨 *SOS ALERT* 🚨\n\n👤 *Sender:* ${name}\n🏠 *Address:* ${addr}\n🆔 *ID:* ${Date.now()}`;
                 
-                // HIGHLIGHT: Capturing Phone Settings/Info
-                const device = navigator.platform;
-                const battery = await navigator.getBattery().then(b => Math.round(b.level * 100) + "%").catch(() => "N/A");
-                const settings = `Device: ${device} | Battery: ${battery}`;
-
-                // HIGHLIGHT: Clean message format for the Monitor
-                const message = `🚨 SOS_ALERT 🚨\nCoords: ${lat},${lng}\nInfo: ${settings}\nID: ${time}`;
-
-                fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT}&text=${encodeURIComponent(message)}`)
-                .then(() => {
-                    document.getElementById('status').innerText = "✅ ALERT RECEIVED BY COMMAND CENTER";
-                    setTimeout(() => { document.getElementById('status').innerText = "HOLD TO SEND AGAIN"; }, 5000);
-                });
-            }, (err) => alert("GPS Error: " + err.message), { enableHighAccuracy: true });
+                await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT}&text=${encodeURIComponent(detailMsg)}&parse_mode=Markdown`);
+                
+                document.getElementById('status').innerText = "✅ LOCATION & DATA SENT";
+            }, (err) => alert(err.message), { enableHighAccuracy: true });
         }
 
         const btn = document.getElementById('sos-trigger');
@@ -120,3 +134,4 @@
 
 
  -->
+
