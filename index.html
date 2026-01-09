@@ -34,7 +34,7 @@
                 const time = new Date().getTime(); // Unique ID
                 
                 // HIGHLIGHT: Formatting message for the Dashboard
-                const message = `🚨 SOS_ALERT 🚨\nCode: 0{${lat}},${lng}\nID: ${time}`;
+                const message = `🚨 SOS_ALERT 🚨\nCode: ${lat},${lng}\nID: ${time}`;
 
                 fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT}&text=${encodeURIComponent(message)}`)
                 .then(r => r.json())
@@ -59,3 +59,4 @@
     </script>
 </body>
 </html>
+
